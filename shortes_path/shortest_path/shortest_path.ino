@@ -32,8 +32,6 @@ int pre = 0, dem = 0, time_turn_left = 562, time_turn_right = 562; // chinh time
 //int frontSensor, leftSensor, rightSensor, disBack;
 float previous_error = 0, previous_I = 0;
 int lastError = 0;
-int turn[50] = {2, 0, 2, 0, 2, 0, 2, 2, 0, 0, 2, 0, 2, 0}; // mang hang 0 la re trai 1 la di thang 2 la re phai 3 la di lui moi khi gap tuong
-//{2,0, 0,0,0,0,  2,0,2,0, 0,2, 2,2,0, 2,0,0,2,0,0,0,0,2,0,0};
 float Kp = 10, Kd = 30, Ki = 0;
 float error = 0, P = 0, I = 0, D = 0, PID_value = 0;
 //---------------------------------------------------------------------
