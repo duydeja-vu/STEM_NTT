@@ -29,9 +29,9 @@ float oldLeftSensor, oldRightSensor, leftSensor, rightSensor, frontSensor, oldFr
 unsigned int pingSpeed = 30; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
 unsigned long pingTimer;     // Holds the next ping time.
 // kalman filter
-SimpleKalmanFilter kalmanFrontSensor(2, 2, 0.001);
-SimpleKalmanFilter kalmanLeftSensor(2, 2, 0.001);
-SimpleKalmanFilter kalmanRightSensor(2, 2, 0.001);
+//SimpleKalmanFilter kalmanFrontSensor(2, 2, 0.001);
+//SimpleKalmanFilter kalmanLeftSensor(2, 2, 0.001);
+//SimpleKalmanFilter kalmanRightSensor(2, 2, 0.001);
 // ---------------------------------------------------------------
 
 // PID controller config and variables---------------------------------
