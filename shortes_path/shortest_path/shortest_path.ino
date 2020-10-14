@@ -6,9 +6,13 @@
 #include <Servo.h>
 //LiquidCrystal_I2C lcd(0x27, 16, 2);
 #include <NewPing.h>
+#include<SimpleKalmanFilter.h>
 
 // a instance of DC motor object
 kmotor _kmotor(true);
+
+
+
 
 // Ultrasonic sensor config and variables---------------------------------
 #define TRIGGERPIN_LEFT 4
@@ -24,6 +28,10 @@ NewPing sonarFront(TRIGGERPIN_FRONT, ECHOPIN_FRONT, MAX_DISTANCE);
 float oldLeftSensor, oldRightSensor, leftSensor, rightSensor, frontSensor, oldFrontSensor, lSensor, rSensor, fSensor;
 unsigned int pingSpeed = 30; // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
 unsigned long pingTimer;     // Holds the next ping time.
+// kalman filter
+SimpleKalmanFilter kalmanFrontSensor(2, 2, 0.001);
+SimpleKalmanFilter kalmanLeftSensor(2, 2, 0.001);
+SimpleKalmanFilter kalmanRightSensor(2, 2, 0.001);
 // ---------------------------------------------------------------
 
 // PID controller config and variables---------------------------------
@@ -179,12 +187,39 @@ void real_thang()
     }
 }
 
+
+
+
 void ReadSensors()
 {
     lSensor = sonarLeft.ping_cm(); //ping in cm
     rSensor = sonarRight.ping_cm();
     fSensor = sonarFront.ping_cm();
 
+  /*
+    leftSensor = kalmanLeftSensor.updateEstimate(lSensor);
+    
+    leftSensor = kalmanLeftSensor.updateEstimate(leftSensor);
+    leftSensor = kalmanLeftSensor.updateEstimate(leftSensor);
+    leftSensor = kalmanLeftSensor.updateEstimate(leftSensor);
+    
+    
+    rightSensor = kalmanRightSensor.updateEstimate(rSensor);
+    /*
+    rightSensor = kalmanRightSensor.updateEstimate(rightSensor);
+    rightSensor = kalmanRightSensor.updateEstimate(rightSensor);
+    rightSensor = kalmanRightSensor.updateEstimate(rightSensor);
+    
+
+    
+    frontSensor = kalmanFrontSensor.updateEstimate(fSensor);
+    /*
+    frontSensor = kalmanFrontSensor.updateEstimate(frontSensor);
+    frontSensor = kalmanFrontSensor.updateEstimate(frontSensor);
+    frontSensor = kalmanFrontSensor.updateEstimate(frontSensor);
+    */
+
+    
     leftSensor = (lSensor + oldLeftSensor) / 2; //average distance between old & new readings to make the change smoother
     rightSensor = (rSensor + oldRightSensor) / 2;
     frontSensor = (fSensor + oldFrontSensor) / 2;
@@ -192,6 +227,7 @@ void ReadSensors()
     oldLeftSensor = leftSensor; // save old readings for movment
     oldRightSensor = rightSensor;
     oldFrontSensor = frontSensor;
+    
 }
 
 int FindingWall()
@@ -256,7 +292,7 @@ void testLeft()
 
 void DelayForward()
 {
-    for (int i = 0; i <= 8; i++)
+    for (int i = 0; i <= 12; i++)
     {
         thang();
         delay(50);
