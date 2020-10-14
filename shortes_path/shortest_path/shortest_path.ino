@@ -218,8 +218,6 @@ void ReadSensors()
     frontSensor = kalmanFrontSensor.updateEstimate(frontSensor);
     frontSensor = kalmanFrontSensor.updateEstimate(frontSensor);
     */
-
-    
     leftSensor = (lSensor + oldLeftSensor) / 2; //average distance between old & new readings to make the change smoother
     rightSensor = (rSensor + oldRightSensor) / 2;
     frontSensor = (fSensor + oldFrontSensor) / 2;
