@@ -6,13 +6,9 @@
 #include <Servo.h>
 //LiquidCrystal_I2C lcd(0x27, 16, 2);
 #include <NewPing.h>
-#include<SimpleKalmanFilter.h>
+//#include <SimpleKalmanFilter.h>
 
-// a instance of DC motor object
 kmotor _kmotor(true);
-
-
-
 
 // Ultrasonic sensor config and variables---------------------------------
 #define TRIGGERPIN_LEFT 4
@@ -36,18 +32,19 @@ unsigned long pingTimer;     // Holds the next ping time.
 
 // PID controller config and variables---------------------------------
 int initial_motor_speed = 200;
-int pre = 0, dem = 0, time_turn_left = 562, time_turn_right = 562; // chinh times de quay dung 90 do moi lan chinh nap lai code + clean banh
-//int frontSensor, leftSensor, rightSensor, disBack;
+int pre = 0, dem = 0, timeTurnLeft = 562, time_turn_right = 562; // chinh times de quay dung 90 do moi lan chinh nap lai code + clean banh
 float previous_error = 0, previous_I = 0;
 int lastError = 0;
 float Kp = 10, Kd = 30, Ki = 0;
 float error = 0, P = 0, I = 0, D = 0, PID_value = 0;
 //---------------------------------------------------------------------
 
-// variables that using for finding the existing wall----
+// using for finding the existing wall----
 bool wallLeft = false, wallRight = false, wallFront = false;
 const int wallThreshold = 30;
 const int frontThreshold = 12;
+const int delayForwardTime = 6;
+int times = 300;
 //-------------------------------------------------
 
 // Array that recording steps of the robot's movement
@@ -63,38 +60,51 @@ int index = 0;
 
 void thang()
 {
-    _kmotor.tien(0, 200);
-    _kmotor.tien(1, 200);
+    _kmotor.tien(0, 100);
+    _kmotor.tien(1, 100);
 }
 void trai()
 {
-    /*
-    _kmotor.tien(0, -200);
-    _kmotor.tien(1, 200);
-  */
+    
+    _kmotor.tien(0, -100);
+    _kmotor.tien(1, 100);
+  
+ /*
     digitalWrite(7, 0);
     digitalWrite(6, 0);
     digitalWrite(8, 1);
     digitalWrite(3, 1);
+    */
 }
 void phai()
 {
-    /*
+    
     _kmotor.tien(0, 100);
     _kmotor.tien(1, -100);
-  */
+  
+ /*
     digitalWrite(7, 1);
     digitalWrite(6, 1);
     digitalWrite(8, 0);
     digitalWrite(3, 0);
+    */
 }
 
-void lui(bool is_start)
+void lui()
 {
     /*
     _kmotor.tien(0, -200);
     _kmotor.tien(1, -200);
-  */
+    */
+    _kmotor.tien(0, 100);
+    _kmotor.tien(1, -100);
+    delay(times);
+    _kmotor.tien(0, 100);
+    _kmotor.tien(1, -100);
+    delay(times);
+  
+
+ /*
     if (is_start == true)
     {
         is_start = false;
@@ -105,7 +115,8 @@ void lui(bool is_start)
     digitalWrite(6, 0);
     digitalWrite(8, 0);
     digitalWrite(3, 1);
-    delay(time_turn_left);
+    delay(timeTurnLeft);
+    */
 }
 
 void initWheel()
@@ -187,16 +198,13 @@ void real_thang()
     }
 }
 
-
-
-
 void ReadSensors()
 {
-    lSensor = sonarLeft.ping_cm(); //ping in cm
-    rSensor = sonarRight.ping_cm();
-    fSensor = sonarFront.ping_cm();
+    leftSensor = sonarLeft.ping_cm(); //ping in cm
+    rightSensor = sonarRight.ping_cm();
+    frontSensor = sonarFront.ping_cm();
 
-  /*
+    /*
     leftSensor = kalmanLeftSensor.updateEstimate(lSensor);
     
     leftSensor = kalmanLeftSensor.updateEstimate(leftSensor);
@@ -218,14 +226,15 @@ void ReadSensors()
     frontSensor = kalmanFrontSensor.updateEstimate(frontSensor);
     frontSensor = kalmanFrontSensor.updateEstimate(frontSensor);
     */
-    leftSensor = (lSensor + oldLeftSensor) / 2; //average distance between old & new readings to make the change smoother
+   /*
+    leftSensor = (lSensor + oldLeftSensor) / 2;
     rightSensor = (rSensor + oldRightSensor) / 2;
     frontSensor = (fSensor + oldFrontSensor) / 2;
-
-    oldLeftSensor = leftSensor; // save old readings for movment
+ 
+    oldLeftSensor = leftSensor;
     oldRightSensor = rightSensor;
     oldFrontSensor = frontSensor;
-    
+    */
 }
 
 int FindingWall()
@@ -282,7 +291,7 @@ void testLeft()
   _kmotor.stop();
   delay(50);
   trai();
-  delay(time_turn_left);
+  delay(timeTurnLeft);
   _kmotor.stop();
   delay(50);
 }
@@ -290,10 +299,18 @@ void testLeft()
 
 void DelayForward()
 {
-    for (int i = 0; i <= 12; i++)
+  /*
+    for (int i = 0; i <= delayForwardTime; i++)
     {
         thang();
         delay(50);
+    }
+    */
+    ReadSensors();
+    while(frontSensor > 11)
+    {
+      real_thang();
+      ReadSensors();
     }
 }
 
@@ -316,40 +333,40 @@ void optimizeStep(int arr[], int *p)
     // RBL = B
     if ((arr[i - 1] == goL) && (arr[i - 2] == goB) && (arr[i - 3] == goR))
     {
-        arr[i-3] = goB;
+        arr[i - 3] = goB;
         *p -= 2;
     }
     // LBL = F
     else if ((arr[i - 1] == goL) && (arr[i - 2] == goB) && (arr[i - 3] == goL))
     {
-        arr[i-3] = goF;
+        arr[i - 3] = goF;
         *p -= 2;
     }
     // LBR = B
     else if ((arr[i - 1] == goR) && (arr[i - 2] == goB) && (arr[i - 3] == goL))
     {
-        arr[i-3] = goB;
+        arr[i - 3] = goB;
         *p -= 2;
     }
     // FBF = B
     else if ((arr[i - 1] == goF) && (arr[i - 2] == goB) && (arr[i - 3] == goF))
     {
-        arr[i-3] = goB;
+        arr[i - 3] = goB;
         *p -= 2;
     }
     // FBL = R
     else if ((arr[i - 1] == goL) && (arr[i - 2] == goB) && (arr[i - 3] == goF))
     {
-        arr[i-3] = goR;
+        arr[i - 3] = goR;
         *p -= 2;
     }
     // LBF = R
-     else if ((arr[i - 1] == goF) && (arr[i - 2] == goB) && (arr[i - 3] == goL))
+    else if ((arr[i - 1] == goF) && (arr[i - 2] == goB) && (arr[i - 3] == goL))
     {
-        arr[i-3] = goR;
+        arr[i - 3] = goR;
         *p -= 2;
     }
-    return ;
+    return;
 }
 
 void tinh()
@@ -365,14 +382,17 @@ void tinh()
     delay(50);
   */
 
-    
     Serial.println("-------------");
     bool canAppendStep = false;
     ReadSensors();
     int numberWallExist = FindingWall();
+    Serial.println(numberWallExist);
+    Serial.println(wallLeft);
+    Serial.println(wallFront);
+    Serial.println(wallRight);
     if (numberWallExist == 2)
     {
-        if (wallLeft == true && wallRight == true)
+        if (wallLeft == true && wallRight == true) // only append step when robot go to the intersection
         {
             goto jump;
         }
@@ -392,6 +412,8 @@ jump:
     {
         if (wallFront == false) // left wall exist + front wall doesn't exist => FORWARD
         {
+            real_thang();
+            /*
             if (canAppendStep == true)
             {
                 leftFollowPath[index] = goF;
@@ -400,12 +422,20 @@ jump:
             }
             real_thang();
             Serial.println("FORWARD");
+            */
         }
         else
         {
-
+            
+            
             if (wallRight == true) // (left wall + front wall + right wall) exist => BACK
             {
+              _kmotor.stop();
+            lui();
+            delay(times);
+            _kmotor.stop();
+            DelayForward();
+              /*
                 Serial.println("BACK");
                 _kmotor.stop();
                 delay(50);
@@ -420,9 +450,17 @@ jump:
                 leftFollowPath[index] = goB;
                 index++;
                 optimizeStep(leftFollowPath, &index);
+                */
             }
             else // (left wall + front wall) exist + right wall doesn't exist => RIGHT
             {
+              
+                _kmotor.stop();
+            phai();
+            delay(times);
+            _kmotor.stop();
+            DelayForward();
+                /*
                 Serial.println("RIGHT");
                 _kmotor.stop();
                 delay(50);
@@ -435,16 +473,23 @@ jump:
                 leftFollowPath[index] = goR;
                 index++;
                 optimizeStep(leftFollowPath, &index);
+                */
             }
         }
     }
     else // Left wall exist => LEFT
     {
+        _kmotor.stop();
+            trai();
+            delay(times);
+            _kmotor.stop();
+            DelayForward();
+        /*
         Serial.println("LEFT");
         _kmotor.stop();
         delay(50);
         trai();
-        delay(time_turn_left);
+        delay(timeTurnLeft);
         _kmotor.stop();
         delay(50);
         DelayForward();
@@ -452,6 +497,7 @@ jump:
         leftFollowPath[index] = goL;
         index++;
         optimizeStep(leftFollowPath, &index);
+        */
     }
     displayStep();
 }
